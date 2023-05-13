@@ -16,15 +16,19 @@ WHERE release_year BETWEEN 2018 AND 2020;
 SELECT name FROM performers
 WHERE name NOT LIKE '% %';
 
---Название треков, которые содержат слово «мой» или «my».
+--Название треков, которые содержат слово «мой» или «my» (var_1).
 SELECT name FROM tracks
-WHERE name LIKE '%My%' OR name LIKE '%мой%';
+WHERE string_to_array(lower(name), ' ') && ARRAY['my', 'мой'];
+
+--Название треков, которые содержат слово «мой» или «my» (var_2).
+SELECT name FROM tracks
+WHERE name ~* '.*my\M.*' OR name ~* '.*мой\M.*'
 
 -- TASK 3
 
 --Количество исполнителей в каждом жанре.
 SELECT name, COUNT(name) FROM genres g
-JOIN performer_genre pg ON g.genre_id = pg.genre_id
+LEFT JOIN performer_genre pg ON g.genre_id = pg.genre_id
 GROUP BY name;
 
 --Количество треков, вошедших в альбомы 2019–2020 годов.
@@ -38,11 +42,15 @@ JOIN tracks t ON a.album_id = t.album_id
 GROUP BY a.name;
 
 --Все исполнители, которые не выпустили альбомы в 2020 году.
-SELECT p.name FROM performers p
-JOIN album_performer ap ON p.performer_id = ap.performer_id
-JOIN albums ON ap.album_id = albums.album_id  
-WHERE albums.release_year != 2020;
-
+SELECT p.name
+FROM performers p
+WHERE p.name NOT IN (
+	SELECT p.name
+	FROM performers p
+	JOIN album_performer ap ON p.performer_id = ap.performer_id
+	JOIN albums ON ap.album_id = albums.album_id  
+	WHERE albums.release_year = 2020);
+	
 --Названия сборников, в которых присутствует конкретный исполнитель (Michael Jackson).
 SELECT c.name FROM collections c
 JOIN tracks_collections tc ON c.collection_id = tc.collection_id
@@ -77,10 +85,12 @@ JOIN tracks ON albums.album_id = tracks.album_id
 WHERE tracks.duration = (SELECT MIN(tracks.duration) FROM tracks);
 
 --Названия альбомов, содержащих наименьшее количество треков.
-SELECT a.name, COUNT(a.name) FROM albums a
+SELECT a.name FROM albums a
 JOIN tracks t ON a.album_id = t.album_id
-GROUP BY a.name
-ORDER BY (SELECT COUNT(a.name))
-
-
-
+GROUP BY a.album_id
+HAVING COUNT(t.track_id) = (
+	SELECT COUNT(track_id) FROM tracks
+	GROUP BY album_id
+	ORDER BY 1
+	LIMIT 1
+);

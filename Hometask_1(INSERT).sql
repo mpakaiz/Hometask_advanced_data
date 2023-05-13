@@ -81,7 +81,9 @@ INSERT INTO tracks(track_id, name, duration, album_id) VALUES
 (6, 'Mine', 263, 4),
 (7, 'Mean', 239, 4),
 (8, 'Exile', 298, 5),
-(9, 'Oh My God', 258, 3)
+(9, 'Oh My God', 258, 3),
+(10, 'Myself', 260, 3),
+(11, 'друг Мой нежный', 250, 1)
 ;
 
 INSERT INTO collections(collection_id, name, release_year) VALUES
